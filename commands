@@ -54,3 +54,11 @@ export REGISTRY_IP="10.108.38.6")
 
 [curl -k -u "$REGISTRY_USER:$REGISTRY_PASSWORD" https://10.1.0.6:30007/v2/_catalog]
 
+(After Created the Infrastructure Test Registry using this command)
+
+9. Accessing the Docker Registry
+   You can now access your private Docker registry securely at https://my-registry:30007! Push and pull Docker images to your registry like this:
+
+[docker push my-registry:30007/<image-name>]
+[docker pull my-registry:30007/<image-name>]
+
