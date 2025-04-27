@@ -1,0 +1,56 @@
+Steps
+    
+1. Generate Self-Signed TLS Certificates
+   First, generate the necessary TLS certificates for the registry using OpenSSL:
+
+[mkdir certs]
+[openssl req -x509 -newkey rsa:4096 -days 365 -nodes -sha256 -keyout certs/tls.key -out certs/tls.crt -subj "/CN=my-registry" -addext "subjectAltName = DNS:my-registry"]
+
+2. Create htpasswd Authentication File
+   Generate a password file for basic authentication:
+
+[sudo docker run --entrypoint htpasswd httpd:2 -Bbn myuser mypasswd > auth/htpasswd]
+
+
+3. Create Kubernetes Secrets
+   Create Kubernetes secrets for the TLS certificates and the authentication file:
+
+[sudo kubectl create secret tls certs-secret --cert=/home/azureuser/certs/tls.crt --key=/home/azureuser/certs/tls.key]
+[sudo kubectl create secret generic auth-secret --from-file=/home/azureuser/auth/htpasswd]
+
+4. Define Docker Registry Deployment
+   Create a deployment YAML file for the Docker registry (registry-deployment.yaml)
+
+   Apply this deployment using kubectl:
+   [sudo kubectl apply -f registry-deployment.yaml]
+
+5. Define Kubernetes Service (NodePort)
+   Create a service YAML file to expose the Docker registry using NodePort (service.yaml):
+
+   Apply the service using kubectl:
+   [sudo kubectl apply -f service.yaml]
+
+6. Add Registry to /etc/hosts
+   Edit your /etc/hosts file to point the registry domain to its IP address:
+
+[vim /etc/hosts]
+[ex: 10.109.4.233  my-registry]
+
+
+(IMPORTANT: Add the TLS certs to the all worker nodes to make the connection to the docker registry)
+
+7. Log In to Docker Registry
+   log in to the Docker registry using the credentials you created:
+
+[sudo docker login my-registry:30007 -u myuser -p mypasswd]
+
+(enviornment variables: export REGISTRY_NAME="my-registry"
+export REGISTRY_PASSWORD="mypasswd"
+export REGISTRY_USER="myuser"
+export REGISTRY_IP="10.108.38.6")
+
+8. Verify Registry Accessibility
+   To verify if the registry is accessible, use the curl command to fetch the catalog:
+
+[curl -k -u "$REGISTRY_USER:$REGISTRY_PASSWORD" https://10.1.0.6:30007/v2/_catalog]
+
